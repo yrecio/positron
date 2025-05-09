@@ -1,93 +1,1571 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="stylesheet" href="css/leaflet.css">
-        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
-        <link rel="stylesheet" href="css/qgis2web.css">
-        <link rel="stylesheet" href="css/fontawesome-all.min.css">
-        <style>
-        html, body, #map {
+<html>
+
+<head>
+    <title>Mapas de localizaciones - EpData</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content=" width=device-width, initial-scale=" 1.0">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <link rel="stylesheet" href="leaflet.css">
+    <link rel="stylesheet" href="Control.Geocoder.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+
+<body>
+    <style>
+        /* partes-principales */
+
+        #entorno {
+            width: 95%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Lato', 'Lucida Sans', sans-serif;
+        }
+
+        #parte-sup {
+            width: 100%;
+            height: 65%;
+            margin-top: 1rem;
+            background-color: rgb(255, 255, 255);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #parte-inf {
+            width: 100%;
+            margin-top: 30px;
+        }
+
+        /* parte-sup */
+
+        #boton-descarga {
+            margin-left: 1rem;
+            background-color: black;
+            padding: 5px 10px 5px 10px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-bottom: solid #c1c1c1 3px;
+        }
+
+        #boton-descarga:hover {
+            background-color: #00bcd4;
+            border-bottom: none;
+        }
+
+        /* parte-inf */
+
+        #menu {
+            height: 34px;
+            background-color: rgb(255, 255, 255);
+            border-bottom: 2px solid rgb(0, 0, 0);
+            display: flex;
+            justify-content: left;
+            flex-direction: row;
+        }
+
+        #parte-inf-cuerpo {
+            height: 90%;
+            background-color: rgb(248, 248, 248);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-bottom: 2rem;
+
+        }
+
+        .elemento-menu {
+            padding: 0px 16px 0px 16px;
+            height: 100%;
+            background-color: black;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 1rem;
+        }
+
+        .elemento-menu:hover {
+            background-color: #00bcd4;
+        }
+
+        #elemento-menu-localizaciones {
+            background-color: #00bcd4;
+        }
+
+        .seccion-parte-inf {
+            height: 90%;
+            width: 98%;
+            margin-top: 2rem;
+            margin-left: 2rem;
+        }
+
+        /* Sección "Titular, subtítulo y notas" */
+
+        #seccion-titulares {
+            display: none;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+
+        #seccion-titulares textarea {
+            margin-right: 1rem;
+            font-size: 1.1rem;
+            height: 35px;
+            margin-bottom: 0.5rem;
+        }
+
+        #seccion-titulares textarea:hover {
+            border: #00bcd4 2px solid;
+        }
+
+        .nota-fuente {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .titulo-subtitulo {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .titulo-subtitulo textarea {
+            margin-left: 1rem;
+            width: 60%;
+        }
+
+        .nota-fuente textarea {
+            margin-left: 1rem;
+            width: 20%;
+        }
+
+
+        /* Sección "Añadir puntos y localizaciones" */
+
+        #seccion-elementos-mapa {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+
+        #subseccion-izquierda {
+            width: 50%;
+        }
+
+        .localizacion {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            position: relative;
+        }
+
+        .textarea-localizaciones {
+            width: 70%;
+            margin-right: 1rem;
+            font-size: 1.1rem;
+            height: 35px;
+        }
+
+        .textarea-localizaciones:hover {
+            border: #00bcd4 2px solid;
+        }
+
+        /* Este es el botón que al dar georreferencia el punto */
+
+        .boton-eliminar {
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            color: #767676;
+            align-items: center;
+            cursor: pointer;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            margin-right: 0.5rem;
+            margin-left: 0.5rem;
+            text-decoration: underline;
+        }
+
+        .boton-eliminar:hover {
+            font-weight: bold;
+            color: #cc0000;
+        }
+
+        .boton-icono {
+            font-size: 1.4rem;
+            font-weight: bold;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 36px;
+            height: 36px;
+            border: solid #000000 1px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        .boton-icono:hover {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #00bcd4;
+            background-color: #ffffff;
+            border: solid #00bcd4 1px;
+        }
+
+        #boton-nueva-loc {
+            width: 96%;
+            font-size: 1.1rem;
+            padding: 0.2rem;
+            margin-top: 0.7rem;
+            border-top: #000000 1px dashed;
+            text-align: center;
+            cursor: pointer;
+            color: #000000;
+            font-weight: bold;
+        }
+
+        #boton-nueva-loc:hover {
+            border-top: #00bcd4 1px solid;
+            color: #00bcd4;
+        }
+
+        .color-icono {
+            display: flex;
+            flex-direction: row;
+            margin-top: 6px;
+        }
+
+        .autocomplete-suggestions {
+            border: 1px solid #ccc;
+            background: #fff;
+            position: absolute;
+            top: 100%;
+            /* debajo del input */
+            left: 0;
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            font-size: 0.95rem;
+        }
+
+        .autocomplete-suggestions div {
+            padding: 8px 10px;
+            cursor: pointer;
+        }
+
+        .autocomplete-suggestions div:hover {
+            background-color: #00bcd4;
+            color: white;
+        }
+
+        /* Subsección derecha: personalizar y conos y mapa de fondo */
+
+        #subseccion-derecha {
+            width: 50%;
+        }
+
+        /* Personalizar iconos */
+
+        #opciones-iconos {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            flex-direction: row;
+            justify-content: center;
+            border-bottom: 2px solid rgb(222, 222, 222);
+            padding-bottom: 1rem;
+            margin-left: 2rem;
+            margin-right: 2rem;
+        }
+
+        #personalizar-iconos {
+            margin-right: 2rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .seleccionador-iconos {
+            position: relative;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 10px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: row;
+        }
+
+        .seleccionador-iconos .opcion-icono {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 36px;
+            width: 36px;
+            border: 1px solid #000;
+            margin: 0.4rem;
+        }
+
+        .opcion-icono {
+            cursor: pointer;
+        }
+
+        .opcion-icono:hover {
+            border: 1px solid #00bcd4;
+            background-color: white;
+
+        }
+
+        .seleccionador-iconos .opcion-icono svg {
             width: 100%;
             height: 100%;
-            padding: 0;
+        }
+
+        /* Mapas de fondo */
+
+        #selector-mapas-fondo {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 0.24rem;
+            padding-bottom: 1rem;
+        }
+
+        #selector-mapas-fondo label {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-right: 1rem;
+            cursor: pointer;
+        }
+
+        #selector-mapas-fondo input[type="radio"] {
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+
+
+        .linea-vertical {
+            height: 90%;
+            background-color: #6b6b6b;
+            width: 1.5px;
+            border: none;
             margin: 0;
         }
-        </style>
-        <title></title>
-    </head>
-    <body>
-        <div id="map">
+
+        /* Imagen del mapa */
+
+
+        #mapa {
+            width: 1025px;
+            height: 640px;
+            position: relative;
+            /* clave para posicionar hijos */
+            margin-right: 1rem;
+            overflow: hidden;
+            border: solid 2px rgb(154, 154, 154);
+            box-sizing: border-box;
+            image-rendering: crisp-edges;
+        }
+
+        #titulos-mapa {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: #ffffff;
+            z-index: 2;
+            border-bottom: 2px black solid;
+            border-right: 2px black solid;
+        }
+
+        #cuerpo-mapa {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 90%;
+            z-index: 1;
+            /* debajo */
+        }
+
+        #nota-fuente-mapa {
+            border-top: solid black 1px;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 10%;
+            background-color: #ffffff;
+            justify-content: space-between;
+            z-index: 2;
+            position: absolute;
+        }
+
+        #texto-titulo {
+            margin-left: 2rem;
+            margin-right: 2rem;
+            font-size: 26px;
+            margin-bottom: 0rem;
+        }
+
+        #texto-subtitulo {
+            margin-left: 2rem;
+            margin-right: 2rem;
+            font-size: 22px;
+            margin-top: 12px;
+            line-height: 25px;
+            font-weight: normal;
+            margin-bottom: 21px;
+        }
+
+
+        #texto-nota {
+            margin-left: 1rem;
+        }
+
+        #texto-fuente {
+            margin-right: 1rem;
+            text-align: right;
+        }
+
+        .leaflet-control-geocoder,
+        .leaflet-bar {
+            display: none !important;
+        }
+
+        .etiqueta-mapa {
+            border-radius: 0px;
+            font-family: 'Lato', sans-serif;
+            position: absolute;
+            background-color: white;
+            padding: 6px 10px;
+            z-index: 1000;
+            cursor: text;
+            font-weight: bold;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .etiqueta-mapa[contenteditable="true"]:focus {
+            outline: 1px solid #00bcd4;
+        }
+
+        #menu-contextual div {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        #menu-contextual div:hover {
+            background-color: #f0f0f0;
+        }
+
+        .leaflet-control-scale {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 5px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+
+        .leaflet-tile {
+            image-rendering: crisp-edges;
+            /* Para navegadores como Firefox */
+            image-rendering: pixelated;
+            /* Para navegadores como Chrome */
+        }
+
+        #desplegable-iconos {
+            display: none;
+            /* Ocultar por defecto */
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            padding: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #desplegable-iconos-todos {
+            display: flex !important;
+            background-color: white;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            padding: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            flex-direction: row;
+        }
+
+        .tamano-icono span {
+            cursor: pointer;
+            font-size: 22px;
+            background-color: black;
+            color: white;
+            margin: 5px;
+            padding: 0 10px 0 10px;
+        }
+
+        .tamano-icono span:hover {
+            background-color: #00bcd4;
+        }
+
+        .tamano-icono {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+    <div id="entorno">
+        <div id="parte-sup">
+            <div id="mapa">
+                <div id="titulos-mapa">
+                    <h3 id="texto-titulo"></h3>
+                    <h4 id="texto-subtitulo"></h4>
+                </div>
+                <div id="cuerpo-mapa"></div>
+                <div id="nota-fuente-mapa">
+                    <p id="texto-nota"></p>
+                    <p id="texto-fuente">Fuente: elaboración propia - Europa Press (2025)</p>
+                </div>
+            </div>
+            <div id="boton-descarga">Descargar imagen</div>
         </div>
-        <script src="js/qgis2web_expressions.js"></script>
-        <script src="js/leaflet.js"></script>
-        <script src="js/L.Control.Layers.Tree.min.js"></script>
-        <script src="js/leaflet.rotatedMarker.js"></script>
-        <script src="js/leaflet.pattern.js"></script>
-        <script src="js/leaflet-hash.js"></script>
-        <script src="js/Autolinker.min.js"></script>
-        <script src="js/rbush.min.js"></script>
-        <script src="js/labelgun.min.js"></script>
-        <script src="js/labels.js"></script>
-        <script>
-        var map = L.map('map', {
-            zoomControl:false, maxZoom:28, minZoom:1
-        }).fitBounds([[35.84923182702706,-9.46375831946756],[44.12387824965601,2.3487416805324397]]);
-        var hash = new L.Hash(map);
-        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
-        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
-        // remove popup's row if "visible-with-data"
-        function removeEmptyRowsFromPopupContent(content, feature) {
-         var tempDiv = document.createElement('div');
-         tempDiv.innerHTML = content;
-         var rows = tempDiv.querySelectorAll('tr');
-         for (var i = 0; i < rows.length; i++) {
-             var td = rows[i].querySelector('td.visible-with-data');
-             var key = td ? td.id : '';
-             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
-                 rows[i].parentNode.removeChild(rows[i]);
-             }
-         }
-         return tempDiv.innerHTML;
+        <div id="parte-inf">
+            <div id="menu">
+                <div class="elemento-menu" id="elemento-menu-localizaciones">Añadir puntos y localizaciones</div>
+                <div class="elemento-menu" id="elemento-menu-titulares">Titular, subtítulo y notas (opcional)</div>
+            </div>
+            <div id="parte-inf-cuerpo">
+
+                <!-- Contenido de la pestaña "Añadir puntos y localizaciones" -->
+
+                <div class="seccion-parte-inf" id="seccion-elementos-mapa">
+                    <div id="subseccion-izquierda">
+                        <div class="localizacion">
+                            <input type="text" class="textarea-localizaciones" placeholder="Introducir una dirección">
+                            <div>
+                                <div class="boton-icono" id="boton-icono-1" data-icon="icono-1"></div>
+                                <div id="desplegable-iconos" class="seleccionador-iconos">
+                                    <div id="personalizar-iconos">Personalizar iconos:</div>
+                                    <div class="opcion-icono opcion-icono-1 seleccionado" data-icon="icono-1"></div>
+                                </div>
+                            </div>
+                            <div class="boton-eliminar">Quitar</div>
+                            <div class="tamano-icono"><span>+</span><span>-</span></div>
+                            <div class="color-icono">
+                                <input type="color" class="color-picker" value="#000000"
+                                    style="width: 40px; height: 30px; cursor: pointer;">
+                                <textarea placeholder="#000000" class="color-rgb"
+                                    style="width: 80px; height: 30px; resize: none; font-size: 0.9rem;"></textarea>
+                            </div>
+                        </div>
+
+                        <div id="boton-nueva-loc">Añadir otra +</div>
+
+
+                    </div>
+
+                    <hr class="linea-vertical">
+                    <div id="subseccion-derecha">
+                        <div id="selector-mapas-fondo">
+                            <p>Seleccionar mapa de fondo</p>
+                            <div>
+                                <label>
+                                    <input type="radio" name="mapa-fondo" value="Mapa con etiquetas" checked>
+                                    Mapa con etiquetas
+                                </label>
+                                <label>
+                                    <input type="radio" name="mapa-fondo" value="Mapa sin etiquetas">
+                                    Mapa sin etiquetas
+                                </label>
+                                <label>
+                                    <input type="radio" name="mapa-fondo" value="Mapa con etiquetas">
+                                    Satélite
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contenido de la pestaña "Titular, subtítulo y notas" -->
+
+                <div class="seccion-parte-inf" id="seccion-titulares">
+                    <div class="titulo-subtitulo"> Titular: <textarea placeholder="Introducir titular aquí"></textarea>
+                    </div>
+                    <div class="titulo-subtitulo">Subtítulo: <textarea placeholder="Introducir subtítulo"></textarea>
+                    </div>
+                    <div class="nota-fuente">Nota a pie de gráfico: <textarea
+                            placeholder="Introducir nota a pie de página"></textarea>
+                        Fuente: <textarea placeholder="Introducir fuente de los datos"></textarea></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="menu-contextual" style="
+    display: none;
+    position: absolute;
+    background-color: white;
+    border: 1px solid #999;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+    z-index: 2000;
+    font-size: 0.95rem;
+">
+    </div>
+
+    <script>
+
+        async function actTamanoIcono() {
+            document.querySelectorAll('.tamano-icono').forEach(tamanoIcono => {
+                const botonAumentar = tamanoIcono.querySelector('span:nth-child(1)'); // Botón "+"
+                const botonDisminuir = tamanoIcono.querySelector('span:nth-child(2)'); // Botón "-"
+
+                botonAumentar.addEventListener('click', function () {
+                    const localizacionDiv = tamanoIcono.closest('.localizacion');
+                    const marcador = marcadoresEnMapa.find(m => m.container === localizacionDiv)?.marker;
+
+                    if (marcador) {
+                        // Obtener el tamaño actual del marcador
+                        const iconSize = marcador.options.icon.options.iconSize[0];
+                        const nuevoTamaño = Math.min(iconSize + 5, 100); // Aumentar tamaño, máximo 100px
+
+                        // Actualizar el tamaño del marcador
+                        actualizarTamañoIcono(marcador, nuevoTamaño);
+                    }
+                });
+
+                botonDisminuir.addEventListener('click', function () {
+                    const localizacionDiv = tamanoIcono.closest('.localizacion');
+                    const marcador = marcadoresEnMapa.find(m => m.container === localizacionDiv)?.marker;
+
+                    if (marcador) {
+                        // Obtener el tamaño actual del marcador
+                        const iconSize = marcador.options.icon.options.iconSize[0];
+                        const nuevoTamaño = Math.max(iconSize - 5, 10); // Disminuir tamaño, mínimo 10px
+
+                        // Actualizar el tamaño del marcador
+                        actualizarTamañoIcono(marcador, nuevoTamaño);
+                    }
+                });
+            });
+
+            // Función para actualizar el tamaño del icono del marcador
+            function actualizarTamañoIcono(marcador, nuevoTamaño) {
+                const localizacionDiv = marcadoresEnMapa.find(m => m.marker === marcador)?.container;
+                if (!localizacionDiv) return;
+
+                const botonIcono = localizacionDiv.querySelector('.boton-icono');
+                const iconoKey = botonIcono?.getAttribute('data-icon') || "icono-1";
+
+                let svg = iconos[iconoKey]
+                    .replace(/width="[^"]+"/, `width="${nuevoTamaño}"`)
+                    .replace(/height="[^"]+"/, `height="${nuevoTamaño}"`);
+
+                const customDivIcon = L.divIcon({
+                    html: `<div style="width:${nuevoTamaño}px;height:${nuevoTamaño}px" data-icon="${iconoKey}">${svg}</div>`,
+                    iconSize: [nuevoTamaño, nuevoTamaño],
+                    className: ''
+                });
+
+                marcador.setIcon(customDivIcon);
+            }
         }
-        // add class to format popup if it contains media
-		function addClassToPopupIfMedia(content, popup) {
-			var tempDiv = document.createElement('div');
-			tempDiv.innerHTML = content;
-			if (tempDiv.querySelector('td img')) {
-				popup._contentNode.classList.add('media');
-					// Delay to force the redraw
-					setTimeout(function() {
-						popup.update();
-					}, 10);
-			} else {
-				popup._contentNode.classList.remove('media');
-			}
-		}
-        var zoomControl = L.control.zoom({
-            position: 'topleft'
-        }).addTo(map);
-        var bounds_group = new L.featureGroup([]);
-        function setBounds() {
+
+        async function menu() {
+            const menuLocalizaciones = document.getElementById("elemento-menu-localizaciones");
+            const menuTitulares = document.getElementById("elemento-menu-titulares");
+            const seccionTitulares = document.getElementById("seccion-titulares");
+            const seccionElementosMapa = document.getElementById("seccion-elementos-mapa");
+
+            menuLocalizaciones.addEventListener("click", function () {
+                menuLocalizaciones.style.backgroundColor = "#00bcd4";
+                menuTitulares.style.backgroundColor = "black";
+
+                seccionTitulares.style.display = "none";
+                seccionElementosMapa.style.display = "flex";
+            });
+
+            menuTitulares.addEventListener("click", function () {
+                menuLocalizaciones.style.backgroundColor = "black";
+                menuTitulares.style.backgroundColor = "#00bcd4";
+
+                seccionTitulares.style.display = "flex";
+                seccionElementosMapa.style.display = "none";
+            });
+        };
+
+
+
+        const iconos = {
+            "icono-1": `<svg id="icono-1" data-name="Icono 2" version="1.1" viewBox="0 0 335 335">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke-width: 0px;
+      }
+    </style>
+  </defs>
+  <circle class="cls-1" cx="167.5" cy="167.5" r="102"/>
+  <path class="cls-1" d="M167.5,329.5c-89.3,0-162-72.7-162-162S78.2,5.5,167.5,5.5s162,72.7,162,162-72.7,162-162,162ZM167.5,31.5c-75,0-136,61-136,136s61,136,136,136,136-61,136-136S242.5,31.5,167.5,31.5Z"/>
+</svg>`,
+            "icono-2": `<svg id="icono-2" data-name="Icono 2" version="1.1" viewBox="0 0 335 335">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke-width: 0px;
+      }
+    </style>
+  </defs>
+<path class="cls-1" d="M170.1,20.4c49.9,0,92.1,36.8,98.7,84.2,2.2,16-.7,31.1-6,46.1-10.6,29.8-25.5,57.4-41.1,84.7-14.8,25.8-30.6,50.9-47.1,75.6-2.8,4.1-3.1,4.2-5.7.2-26.3-39.6-51.3-80-72.3-122.7-8-16.4-15.3-33.1-20-50.8-6.5-24.6-1.9-47.5,10.8-68.8,16.1-27,40.1-42.8,71.3-47.4,4.4-.7,8.9-.8,11.4-1h0ZM172,68.9c-25.6,0-45.6,19.6-45.7,45.1,0,25.3,19.8,45.5,44.8,45.6,25.7.1,45.8-19.7,45.9-45.4,0-25.3-19.7-45.2-45-45.3Z"/>
+</svg>`,
+            "icono-3": `<svg id="icono-3" data-name="Icono 3" version="1.1" viewBox="0 0 335 335">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke-width: 0px;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M281.8,175.1l-21.6-71.5c-9.6,32.3-30.5,35.2-58.4,3.2-17.9-20.5-28.3-50.3-23.8-71.8.5-2.4,2.7-5.6.2-7.2-2.8-1.7-5.3,1.3-7.6,2.7-19,12.1-33,27.7-43.2,45.9-37.3,66.6-10.7,142.3-11.8,147.3-7.4-2.3-38.5-7.5-32.7-72.4-4.6,3.2-26.1,29.5-28.4,52.8-4.1,39.6,10.5,74.1,46.6,101.5,9.8,7.5,20.6,13.6,33.4,17.6l82.4,1.6c12.5-1.8,22.8-7.1,32.5-13.2,25.1-15.9,37.7-38.6,42.9-60.8s1.9-52.5-10.3-75.8Z"/>
+</svg>`,
+            "icono-4": `<svg id="icono-4" data-name="icono-4" version="1.1" viewBox="0 0 335 335">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke-width: 0px;
+      }
+    </style>
+  </defs>
+  <rect class="cls-1" x="50.2" y="50.2" width="234.5" height="234.5"/>
+</svg>`,
+            "icono-5": `<svg id="icono-5" data-name="icono-5" version="1.1" viewBox="0 0 335 335">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke-width: 0px;
+      }
+    </style>
+  </defs>
+  <rect class="cls-1" x="50.2" y="50.2" width="234.5" height="234.5" rx="117.2" ry="117.2"/>
+</svg>`,
+            "icono-6": `<svg id="icono-6" data-name="icono-6" version="1.1" viewBox="0 0 335 335">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke-width: 0px;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M206.2,149.8c-1.1-2.6-2.4-5-3.9-7.3-1.5-2.3-3.3-4.5-5.3-6.4s-4.1-3.7-6.4-5.3c-2.3-1.5-4.8-2.9-7.3-3.9-2.6-1.1-5.2-1.9-8-2.4-2.7-.5-5.5-.8-8.3-.8s-5.5.3-8.3.8c-2.7.5-5.4,1.3-8,2.4-2.6,1.1-5,2.4-7.3,3.9-2.3,1.5-4.5,3.3-6.4,5.3-2,2-3.7,4.1-5.3,6.4-1.5,2.3-2.9,4.8-3.9,7.3s-1.9,5.2-2.4,8c-.5,2.7-.8,5.5-.8,8.3s.3,5.5.8,8.3c.5,2.7,1.3,5.4,2.4,8,1.1,2.6,2.4,5,3.9,7.3,1.5,2.3,3.3,4.5,5.3,6.4,2,2,4.1,3.7,6.4,5.3,2.3,1.5,4.8,2.9,7.3,3.9,2.6,1.1,5.2,1.9,8,2.4,2.7.5,5.5.8,8.3.8s5.5-.3,8.3-.8c2.7-.5,5.4-1.3,8-2.4,2.6-1.1,5-2.4,7.3-3.9,2.3-1.5,4.5-3.3,6.4-5.3,2-2,3.7-4.1,5.3-6.4,1.5-2.3,2.9-4.8,3.9-7.3,1.1-2.6,1.9-5.2,2.4-8,.5-2.7.8-5.5.8-8.3s-.3-5.5-.8-8.3c-.5-2.7-1.3-5.4-2.4-8Z"/>
+  <path class="cls-1" d="M167,91.9c-40.9,0-74.1,33.3-74.1,74.1s33.3,74.1,74.1,74.1,74.1-33.3,74.1-74.1-33.3-74.1-74.1-74.1ZM167,228.2c-34.3,0-62.2-27.9-62.2-62.2s27.9-62.2,62.2-62.2,62.2,27.9,62.2,62.2-27.9,62.2-62.2,62.2Z"/>
+  <path class="cls-1" d="M167,38.7c-70.2,0-127.3,57.1-127.3,127.3s57.1,127.3,127.3,127.3,127.3-57.1,127.3-127.3-57.1-127.3-127.3-127.3ZM167,289.3c-68,0-123.3-55.3-123.3-123.3s55.3-123.3,123.3-123.3,123.3,55.3,123.3,123.3-55.3,123.3-123.3,123.3Z"/>
+  <path class="cls-1" d="M167,61.9c-57.4,0-104.1,46.7-104.1,104.1s46.7,104.1,104.1,104.1,104.1-46.7,104.1-104.1-46.7-104.1-104.1-104.1ZM167,264.1c-54.1,0-98.1-44-98.1-98.1s44-98.1,98.1-98.1,98.1,44,98.1,98.1-44,98.1-98.1,98.1Z"/>
+  <path class="cls-1" d="M167,12.6C81.6,12.6,12.1,82.1,12.1,167.5s69.5,154.9,154.9,154.9,154.9-69.5,154.9-154.9S252.4,12.6,167,12.6ZM167,319.4c-83.8,0-151.9-68.1-151.9-151.9S83.2,15.6,167,15.6s151.9,68.1,151.9,151.9-68.1,151.9-151.9,151.9Z"/>
+</svg>`
         }
-        map.createPane('pane_Positronnolabels_0');
-        map.getPane('pane_Positronnolabels_0').style.zIndex = 400;
-        var layer_Positronnolabels_0 = L.tileLayer('https://a.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
-            pane: 'pane_Positronnolabels_0',
-            opacity: 1.0,
-            attribution: '<a href="https://cartodb.com/basemaps/">Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.</a>',
-            minZoom: 1,
-            maxZoom: 28,
-            minNativeZoom: 0,
-            maxNativeZoom: 20
+
+        let iconoSeleccionado = "icono-1"; // valor por defecto global
+        let marcadoresEnMapa = [];         // ← aquí se guardarán los marcadores
+        let marcadorSeleccionado = null;
+
+        const menuContextual = document.getElementById("menu-contextual");
+        let capaBaseActual;
+
+
+        // Ocultar el menú contextual al hacer clic en otra parte
+        document.addEventListener("click", () => {
+            menuContextual.style.display = "none";
         });
-        layer_Positronnolabels_0;
-        map.addLayer(layer_Positronnolabels_0);
-        setBounds();
-        </script>
-    </body>
+
+
+
+        function asignarIconos() {
+            const botones = document.querySelectorAll(".boton-icono, .opcion-icono"); // Seleccionar todos los botones y opciones
+            botones.forEach(boton => {
+                let iconoKey = boton.getAttribute("data-icon"); // Obtener el valor de data-icon
+                if (!iconoKey) {
+                    // Si no tiene data-icon, asignar el icono predeterminado (icono-1)
+                    iconoKey = "icono-1";
+                }
+                if (iconos[iconoKey]) {
+                    boton.innerHTML = iconos[iconoKey]; // Asignar el icono correspondiente
+                }
+            });
+        }
+
+        async function nuevaLoc() {
+            const botonNuevaLoc = document.getElementById("boton-nueva-loc");
+            const subseccionLocalizaciones = document.getElementById("subseccion-izquierda");
+
+            let contadorLocalizaciones = document.querySelectorAll('.textarea-localizaciones').length;
+
+            botonNuevaLoc.addEventListener("click", async function () {
+                contadorLocalizaciones++; // Incrementar el contador
+
+                const nuevaLocalizacion = document.createElement("div");
+                nuevaLocalizacion.classList.add("localizacion");
+                nuevaLocalizacion.innerHTML = `
+            <input type="text" id="localizacion-${contadorLocalizaciones}" class="textarea-localizaciones"
+                placeholder="Introducir una dirección">
+            <div>
+                <div class="boton-icono" id="boton-icono-${contadorLocalizaciones}" data-icon="${iconoSeleccionado}"></div>
+                <div id="desplegable-iconos-${contadorLocalizaciones}" class="seleccionador-iconos" style="display: none;">
+                    <!-- Este desplegable se llenará dinámicamente -->
+                    
+                </div>
+            </div>
+            <div class="boton-eliminar">Quitar</div>
+            <div class="tamano-icono"><span>+</span><span>-</span></div>
+            <div class="color-icono">
+                    <input type="color" class="color-picker" value="#000000" style="width: 40px; height: 30px; cursor: pointer;">
+    <textarea placeholder="#000000" class="color-rgb" style="width: 80px; height: 30px; resize: none; font-size: 0.9rem;"></textarea>
+                </div>
+
+        `;
+
+
+                subseccionLocalizaciones.insertBefore(nuevaLocalizacion, botonNuevaLoc);
+
+                // Llenar el desplegable de iconos para este botón
+                llenarDesplegableIconos(`#desplegable-iconos-${contadorLocalizaciones}`);
+
+                cambiarColorIcono();
+                asignarIconos(); // Asignar iconos al nuevo botón
+                activarAutocompleteOSM(); // Activar autocompletado para la nueva localización
+                actTamanoIcono();
+
+                configurarBotonesEliminar();
+
+            });
+
+        }
+
+        async function cambiarColorIcono() {
+            const localizaciones = document.querySelectorAll('.localizacion');
+
+            localizaciones.forEach(localizacion => {
+                const inputColor = localizacion.querySelector('.color-picker');
+                const textareaColor = localizacion.querySelector('.color-rgb');
+                const iconoDiv = localizacion.querySelector('.boton-icono');
+
+                const actualizarColor = (nuevoColor) => {
+                    if (!/^#([0-9A-F]{3}){1,2}$/i.test(nuevoColor)) return;
+
+                    // sincronizar ambos campos
+                    inputColor.value = nuevoColor;
+                    textareaColor.value = nuevoColor;
+
+                    // Obtener clave del icono
+                    const iconoKey = iconoDiv.getAttribute('data-icon') || 'icono-1';
+                    let svgOriginal = iconos[iconoKey];
+
+                    // Añadir o actualizar la propiedad `fill` en el style del SVG
+                    let svgColoreado = svgOriginal.replace(/(\.cls-1\s*{[^}]*)(})/, (match, p1, p2) => {
+                        if (/fill\s*:/.test(p1)) {
+                            return p1.replace(/fill\s*:[^;]+/, `fill: ${nuevoColor}`) + p2;
+                        } else {
+                            return `${p1} fill: ${nuevoColor};${p2}`;
+                        }
+                    });
+
+                    // Actualizar botón visual
+                    iconoDiv.innerHTML = svgColoreado;
+
+                    // Actualizar marcador (si existe)
+                    const marcador = marcadoresEnMapa.find(m => m.container === localizacion)?.marker;
+                    if (marcador) {
+                        const tamaño = marcador.options.icon.options.iconSize[0];
+                        const customDivIcon = L.divIcon({
+                            html: `<div style="width:${tamaño}px;height:${tamaño}px">${svgColoreado}</div>`,
+                            iconSize: [tamaño, tamaño],
+                            className: ''
+                        });
+                        marcador.setIcon(customDivIcon);
+                    }
+                };
+
+                // Eventos sincronizados
+                inputColor.addEventListener('input', () => {
+                    actualizarColor(inputColor.value);
+                });
+
+                textareaColor.addEventListener('input', () => {
+                    const val = textareaColor.value.trim();
+                    if (/^#([0-9A-F]{3}){1,2}$/i.test(val)) {
+                        actualizarColor(val);
+                    }
+                });
+            });
+        }
+
+
+
+        async function configurarBotonesEliminar() {
+            const botonesEliminar = document.querySelectorAll(".boton-eliminar");
+
+            botonesEliminar.forEach(boton => {
+                boton.addEventListener("click", function () {
+                    const localizacionDiv = boton.closest(".localizacion");
+
+                    // Buscar el marcador asociado a este bloque
+                    const index = marcadoresEnMapa.findIndex(m => m.container === localizacionDiv);
+
+                    if (index !== -1) {
+                        const marcador = marcadoresEnMapa[index].marker;
+
+                        // Eliminar el marcador del mapa
+                        if (mapa.hasLayer(marcador)) {
+                            mapa.removeLayer(marcador);
+                        }
+
+                        // Eliminar etiqueta si está visible
+                        if (marcador._etiquetaVisible && marcador._etiqueta) {
+                            marcador._etiqueta.remove();
+                        }
+
+                        // Eliminar del array
+                        marcadoresEnMapa.splice(index, 1);
+                    }
+
+                    // Eliminar el bloque visual
+                    localizacionDiv.remove();
+                });
+            });
+
+            // Soporte para tecla SUPR
+            document.addEventListener("keydown", function (e) {
+                if (e.key === "Delete" && marcadorSeleccionado) {
+                    // Buscar el contenedor asociado al marcador seleccionado
+                    const index = marcadoresEnMapa.findIndex(m => m.marker === marcadorSeleccionado);
+
+                    if (index !== -1) {
+                        const localizacionDiv = marcadoresEnMapa[index].container;
+
+                        // Eliminar el marcador del mapa
+                        if (mapa.hasLayer(marcadorSeleccionado)) {
+                            mapa.removeLayer(marcadorSeleccionado);
+                        }
+
+                        // Eliminar etiqueta si está visible
+                        if (marcadorSeleccionado._etiquetaVisible && marcadorSeleccionado._etiqueta) {
+                            marcadorSeleccionado._etiqueta.remove();
+                        }
+
+                        // Eliminar del array
+                        marcadoresEnMapa.splice(index, 1);
+
+                        // Eliminar el bloque visual
+                        if (localizacionDiv) {
+                            localizacionDiv.remove();
+                        }
+
+                        // Reiniciar selección
+                        marcadorSeleccionado = null;
+                    }
+                }
+            });
+        }
+        async function llenarDesplegableIconos(selector) {
+            const contenedorDesplegable = document.querySelector(selector);
+            if (!contenedorDesplegable) {
+                console.warn(`No se encontró el contenedor para selector ${selector}`);
+                return;
+            }
+            // Verificar si el contenido ya está lleno (solo para el desplegable global)
+            if (selector === "#desplegable-iconos-todos" && contenedorDesplegable.children.length > 0) {
+                llenarDesplegableIconos('#desplegable-iconos-todos');
+            }
+
+            contenedorDesplegable.innerHTML = ""; // Vaciar el contenedor antes de llenarlo
+
+            // Recorrer la variable `iconos` y generar los elementos
+            Object.keys(iconos).forEach(iconoKey => {
+                const opcionIcono = document.createElement("div");
+                opcionIcono.classList.add("opcion-icono", `opcion-${iconoKey}`);
+                opcionIcono.setAttribute("data-icon", iconoKey);
+                opcionIcono.innerHTML = iconos[iconoKey];
+                contenedorDesplegable.appendChild(opcionIcono);
+            });
+
+
+            // Volver a asignar los eventos de selección de iconos
+            if (selector === "#desplegable-iconos-todos") {
+                asignarEventosGlobales();
+            } else {
+                seleccionIconos();
+            }
+
+            opcionIcono.addEventListener("click", function () {
+                const localizacionDiv = contenedorDesplegable.closest('.localizacion');
+                const botonIcono = localizacionDiv.querySelector('.boton-icono');
+                const iconoKey = this.getAttribute("data-icon");
+
+                // Actualizar el botón visual de icono
+                botonIcono.setAttribute("data-icon", iconoKey);
+                botonIcono.innerHTML = iconos[iconoKey];
+
+                // Actualizar el marcador correspondiente en el mapa
+                const marcador = marcadoresEnMapa.find(m => m.container === localizacionDiv)?.marker;
+                if (marcador) {
+                    const iconSize = marcador.options.icon.options.iconSize[0];
+                    let svgMarcador = iconos[iconoKey];
+                    const customDivIcon = L.divIcon({
+                        html: `<div style="width:${iconSize}px;height:${iconSize}px" data-icon="${iconoKey}">${svgMarcador}</div>`,
+                        iconSize: [iconSize, iconSize],
+                        className: ''
+                    });
+                    marcador.setIcon(customDivIcon);
+                }
+            });
+
+
+
+        }
+
+        async function seleccionIconos() {
+            const botonesIcono = document.querySelectorAll(".boton-icono");
+
+            // Selección individual de iconos
+            botonesIcono.forEach(boton => {
+                boton.addEventListener("click", function (e) {
+                    e.stopPropagation(); // Evitar que el evento se propague
+                    const desplegable = boton.parentElement.querySelector(".seleccionador-iconos");
+
+                    // Ocultar otros desplegables
+                    document.querySelectorAll(".seleccionador-iconos").forEach(d => {
+                        if (d !== desplegable) d.style.display = "none";
+                    });
+
+                    // Mostrar el desplegable del botón actual
+                    desplegable.style.display = "flex";
+
+                    // Escuchar la selección de un icono
+                    desplegable.querySelectorAll(".opcion-icono").forEach(opcion => {
+                        opcion.addEventListener("click", () => {
+                            const nuevoIcono = opcion.getAttribute("data-icon");
+                            boton.setAttribute("data-icon", nuevoIcono);
+                            boton.innerHTML = iconos[nuevoIcono]; // Actualizar el contenido del botón
+                            desplegable.style.display = "none"; // Ocultar el desplegable
+
+                            // Actualizar el marcador en el mapa
+                            const localizacionDiv = boton.closest('.localizacion');
+                            const marcador = marcadoresEnMapa.find(m => m.container === localizacionDiv)?.marker;
+                            if (marcador) {
+                                const iconSize = marcador.options.icon.options.iconSize[0];
+                                let svg = iconos[nuevoIcono];
+                                const customDivIcon = L.divIcon({
+                                    html: `<div style="width:${iconSize}px;height:${iconSize}px">${svg}</div>`,
+                                    iconSize: [iconSize, iconSize],
+                                    className: '' // Sin clase para evitar estilos Leaflet por defecto
+                                });
+                                marcador.setIcon(customDivIcon); // Actualizar el icono del marcador
+                            }
+                        });
+                    });
+                });
+            });
+
+            // Ocultar desplegables al hacer clic fuera de ellos
+            document.addEventListener("click", function (e) {
+                document.querySelectorAll(".seleccionador-iconos").forEach(desplegable => {
+                    // No ocultar el desplegable global
+                    if (desplegable.id !== "desplegable-iconos-todos") {
+                        desplegable.style.display = "none";
+                    }
+                });
+            });
+
+            // Selección global de iconos
+            const opcionesGlobales = document.querySelectorAll("#desplegable-iconos-todos .opcion-icono");
+            opcionesGlobales.forEach(opcion => {
+                opcion.addEventListener("click", function () {
+                    const nuevoIcono = this.getAttribute("data-icon");
+                    iconoSeleccionado = nuevoIcono; // Actualizar el icono global
+
+                    // Actualizar todos los botones con el nuevo icono seleccionado
+                    botonesIcono.forEach(boton => {
+                        boton.setAttribute("data-icon", nuevoIcono);
+                        boton.innerHTML = iconos[nuevoIcono];
+                    });
+
+                    // Actualizar todos los marcadores en el mapa
+                    marcadoresEnMapa.forEach(({ marker }) => {
+                        const customDivIcon = L.divIcon({
+                            html: `<div style="width:30px;height:30px">${svg}</div>`,
+                            iconSize: [30, 30],
+                            className: '' // Sin clase para evitar estilos Leaflet por defecto
+                        });
+                        marker.setIcon(customDivIcon); // Actualizar el icono del marcador
+                    });
+                });
+            });
+
+
+        }
+
+        async function actualizarTitulosMapa() {
+            // Obtener referencias a los textareas
+            const textareaTitulo = document.querySelector('.titulo-subtitulo textarea[placeholder="Introducir titular aquí"]');
+            const textareaSubtitulo = document.querySelector('.titulo-subtitulo textarea[placeholder="Introducir subtítulo"]');
+            const textareaNota = document.querySelector('.nota-fuente textarea[placeholder="Introducir nota a pie de página"]');
+            const textareaFuente = document.querySelector('.nota-fuente textarea[placeholder="Introducir fuente de los datos"]');
+
+            // Obtener referencias a los elementos del mapa
+            const textoTitulo = document.getElementById("texto-titulo");
+            const textoSubtitulo = document.getElementById("texto-subtitulo");
+            const textoNota = document.getElementById("texto-nota");
+            const textoFuente = document.getElementById("texto-fuente");
+
+            const titulosMapa = document.getElementById("titulos-mapa");
+            const notaFuenteMapa = document.getElementById("nota-fuente-mapa");
+
+            // Función para actualizar la visibilidad de #titulos-mapa
+            function actualizarVisibilidadTitulos() {
+                if (textareaTitulo.value.trim() || textareaSubtitulo.value.trim()) {
+                    titulosMapa.style.display = "block";
+                } else {
+                    titulosMapa.style.display = "none";
+                }
+            }
+
+            // Función para actualizar la visibilidad de #nota-fuente-mapa
+            function actualizarVisibilidadNotaFuente() {
+                if (textareaNota.value.trim() || textareaFuente.value.trim()) {
+                    notaFuenteMapa.style.display = "flex";
+                } else {
+                    notaFuenteMapa.style.display = "none";
+                }
+            }
+
+            // Añadir eventos de input para actualizar dinámicamente
+            textareaTitulo.addEventListener("input", () => {
+                textoTitulo.textContent = textareaTitulo.value; // Actualizar el título
+                actualizarVisibilidadTitulos();
+            });
+
+            textareaSubtitulo.addEventListener("input", () => {
+                textoSubtitulo.textContent = textareaSubtitulo.value; // Actualizar el subtítulo
+                actualizarVisibilidadTitulos();
+            });
+
+            textareaNota.addEventListener("input", () => {
+                textoNota.textContent = textareaNota.value ? `Nota: ${textareaNota.value}` : ""; // Actualizar la nota con "Nota: "
+                actualizarVisibilidadNotaFuente();
+            });
+
+            textareaFuente.addEventListener("input", () => {
+                textoFuente.textContent = textareaFuente.value ? `Fuente: ${textareaFuente.value} - Europa Press (2025)` : ""; // Actualizar la fuente con "Fuente: "
+                actualizarVisibilidadNotaFuente();
+            });
+        }
+
+
+        async function activarAutocompleteOSM() {
+            const inputs = document.querySelectorAll('.textarea-localizaciones');
+
+            inputs.forEach(input => {
+                if (input.dataset.autocomplete === 'true') return;
+                input.dataset.autocomplete = 'true';
+
+                const suggestionBox = document.createElement("div");
+                suggestionBox.className = "autocomplete-suggestions";
+                suggestionBox.style.position = "absolute";
+                suggestionBox.style.border = "1px solid #ccc";
+                suggestionBox.style.background = "#fff";
+                suggestionBox.style.zIndex = "10";
+                suggestionBox.style.maxHeight = "200px";
+                suggestionBox.style.overflowY = "auto";
+                suggestionBox.style.width = input.offsetWidth + "px";
+                suggestionBox.style.display = "none";
+                suggestionBox.style.top = input.offsetHeight + "px";
+                suggestionBox.style.left = "0";
+                input.parentElement.appendChild(suggestionBox);
+
+                input.addEventListener("input", function () {
+                    const query = input.value.trim();
+                    if (query.length < 3) {
+                        suggestionBox.style.display = "none";
+                        return;
+                    }
+
+                    fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`)
+                        .then(response => response.json())
+                        .then(data => {
+                            suggestionBox.innerHTML = "";
+                            if (data.features.length === 0) {
+                                suggestionBox.style.display = "none";
+                                return;
+                            }
+                            data.features.forEach(feature => {
+                                const div = document.createElement("div");
+                                div.textContent = feature.properties.name + ", " + (feature.properties.city || feature.properties.country || '');
+                                div.style.padding = "5px";
+                                div.style.cursor = "pointer";
+                                div.addEventListener("click", () => {
+                                    input.value = div.textContent;
+                                    suggestionBox.style.display = "none";
+
+                                    const coords = feature.geometry.coordinates;
+                                    const latlng = [coords[1], coords[0]];
+
+                                    const localizacionDiv = input.closest('.localizacion');
+                                    const iconoDiv = localizacionDiv.querySelector('.boton-icono');
+                                    const iconoKey = iconoSeleccionado || "icono-1";
+                                    let svg = iconos[iconoKey] || iconos["icono-1"];
+
+                                    // Crear divIcon con SVG inline
+                                    const customDivIcon = L.divIcon({
+                                        html: `<div style="width:30px;height:30px">${svg}</div>`,
+                                        iconSize: [30, 30],
+                                        className: '' // Sin clase para evitar estilos Leaflet por defecto
+                                    });
+
+                                    const marcador = L.marker(latlng, {
+                                        icon: customDivIcon,
+                                        draggable: true
+                                    }).addTo(mapa);
+
+                                    marcador._etiquetaVisible = false;
+                                    marcador._etiqueta = null;
+
+                                    // Hacer que el cursor sea pointer (por si el estilo global no aplica)
+                                    marcador._icon.style.cursor = 'pointer';
+
+                                    marcador.on("move", function (e) {
+                                        if (marcador._etiquetaVisible && marcador._etiqueta) {
+                                            const newLatLng = e.target.getLatLng();
+                                            const pos = mapa.latLngToContainerPoint(newLatLng);
+                                            marcador._etiqueta.style.left = `${pos.x + 15}px`;
+                                            marcador._etiqueta.style.top = `${pos.y - 15}px`;
+                                        }
+                                    });
+
+                                    marcador.on("click", function () {
+                                        marcadorSeleccionado = marcador; // ← SELECCIONAR
+
+                                        if (marcador._etiquetaVisible) {
+                                            marcador._etiqueta.remove();
+                                            marcador._etiquetaVisible = false;
+                                        } else {
+                                            marcador._etiqueta = crearEtiquetaEditable(marcador.getLatLng(), input.value);
+                                            marcador._etiquetaVisible = true;
+                                        }
+                                    });
+
+                                    marcadoresEnMapa.push({ marker: marcador, container: localizacionDiv });
+                                    mapa.setView(latlng, 10);
+                                });
+                                suggestionBox.appendChild(div);
+                            });
+                            suggestionBox.style.display = "block";
+                        });
+                });
+
+                input.addEventListener("blur", function () {
+                    setTimeout(() => suggestionBox.style.display = "none", 200);
+                });
+            });
+        }
+
+
+
+        let mapa;
+
+        async function inicializarMapa() {
+            mapa = L.map("cuerpo-mapa").setView([40.4168, -3.7038], 5); // Madrid
+
+
+            // Añadir control de escala
+            L.control.scale({
+                position: 'bottomleft', // Posición de la escala
+                metric: true,          // Mostrar escala métrica
+                imperial: false        // Ocultar escala imperial
+            }).addTo(mapa);
+
+            // Escuchar el evento 'load' del mapa
+            mapa.on('load', function () {
+                console.log('El mapa está completamente cargado');
+            });
+        }
+
+        function configurarEventosMapaFondo() {
+            document.addEventListener("DOMContentLoaded", () => {
+                const radios = document.querySelectorAll('input[name="mapa-fondo"]');
+                radios.forEach(radio => {
+                    radio.addEventListener("change", function () {
+                        if (this.checked) {
+                            cambiarMapaFondo(this.value);
+                        }
+                    });
+                });
+
+                // Seleccionar el primer radio por defecto
+                radios[0].checked = true;
+                cambiarMapaFondo(radios[0].value);
+            });
+        }
+        async function cambiarMapaFondo(opcion) {
+
+            if (opcion === "Mapa con etiquetas") {
+                // Fondo sin etiquetas
+                capaBaseActual = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
+                    attribution: '&copy; <a href="https://carto.com/">Carto</a>',
+                    maxZoom: 20,
+                    detectRetina: true
+                });
+
+                // Capa de etiquetas desde tu estilo de Mapbox
+                capaEtiquetas = L.tileLayer("https://api.mapbox.com/styles/v1/yrecio/cmagjf7au00w701sd1bmg2x0t/tiles/512/{z}/{x}/{y}?access_token=pk.eyJ1IjoieXJlY2lvIiwiYSI6ImNsZW8zdzAxZTBwdjgzem1xc3RrbW1wMDMifQ.8gDLZaSmpd9koUOSlG38-w", {
+                    tileSize: 512,
+                    zoomOffset: -1,
+                    attribution: '&copy; <a href="https://www.mapbox.com/">Mapbox</a>',
+                    maxZoom: 20,
+                    detectRetina: true
+                });
+
+                // Añadir ambas capas al mapa
+                capaBaseActual.addTo(mapa);
+                capaEtiquetas.addTo(mapa);
+            } else if (opcion === "Mapa sin etiquetas") {
+
+                mapa.removeLayer(capaEtiquetas);
+
+                // Solo fondo sin etiquetas
+                capaBaseActual = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
+                    attribution: '&copy; <a href="https://stamen.com/">Stamen</a>',
+                    maxZoom: 10,
+                    detectRetina: true
+                });
+
+                // Añadir la capa base al mapa
+                capaBaseActual.addTo(mapa);
+            } else if (opcion === "Satélite") {
+
+                mapa.removeLayer(capaEtiquetas);
+
+                // Fondo satelital sin etiquetas
+                capaBaseActual = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+                    attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+                    maxZoom: 20,
+                    detectRetina: true
+                });
+
+                // Añadir la capa base al mapa
+                capaBaseActual.addTo(mapa);
+            }
+        }
+
+
+        async function crearEtiquetaEditable(latlng, textoInicial, marcador) {
+            // Eliminar ", España" del texto inicial si existe
+            textoInicial = textoInicial.replace(/, España$/, '');
+
+
+
+            const etiqueta = document.createElement("div");
+            etiqueta.contentEditable = true;
+            etiqueta.textContent = textoInicial;
+            etiqueta.className = "etiqueta-mapa";
+            etiqueta.style.position = "absolute";
+            etiqueta.style.padding = "4px 8px";
+            etiqueta.style.backgroundColor = "#fff";
+            etiqueta.style.border = "1px solid #000";
+            etiqueta.style.boxShadow = "0px 2px 6px rgba(0,0,0,0.3)";
+            etiqueta.style.fontSize = "16px"; // Tamaño inicial en píxeles
+            etiqueta.style.fontWeight = "bold";
+            etiqueta.style.zIndex = 1000;
+            etiqueta.style.cursor = "text";
+
+            // Crear el botón "X" para eliminar la etiqueta
+            const botonEliminar = document.createElement("span");
+            botonEliminar.textContent = "X";
+            botonEliminar.style.position = "absolute";
+            botonEliminar.style.top = "5px";
+            botonEliminar.style.right = "-22px";
+            botonEliminar.style.backgroundColor = "#cc0000";
+            botonEliminar.style.color = "#fff";
+            botonEliminar.style.fontSize = "0.8rem";
+            botonEliminar.style.padding = "2px 4px";
+            botonEliminar.style.cursor = "pointer";
+            botonEliminar.style.display = "none"; // Ocultar por defecto
+            botonEliminar.style.zIndex = "1001";
+
+            // Crear el campo de entrada para ajustar el tamaño de la fuente
+            const inputTamaño = document.createElement("input");
+            inputTamaño.type = "number";
+            inputTamaño.min = "8"; // Tamaño mínimo en píxeles
+            inputTamaño.max = "72"; // Tamaño máximo en píxeles
+            inputTamaño.value = parseInt(etiqueta.style.fontSize); // Valor inicial
+            inputTamaño.style.position = "absolute";
+            inputTamaño.style.top = "5px";
+            inputTamaño.style.right = "-80px";
+            inputTamaño.style.width = "50px";
+            inputTamaño.style.display = "none"; // Ocultar por defecto
+            inputTamaño.style.zIndex = "1001";
+
+            // Añadir el botón y el campo de entrada a la etiqueta
+            etiqueta.appendChild(botonEliminar);
+            etiqueta.appendChild(inputTamaño);
+
+            // Mostrar el botón "X" y el campo de entrada al hacer clic en la etiqueta
+            etiqueta.addEventListener("focus", function () {
+                botonEliminar.style.display = "block";
+                inputTamaño.style.display = "block";
+            });
+
+            // Ocultar el botón "X" y el campo de entrada al hacer clic fuera de la etiqueta o del campo
+            document.addEventListener("click", function (e) {
+                if (!etiqueta.contains(e.target) && e.target !== inputTamaño) {
+                    botonEliminar.style.display = "none";
+                    inputTamaño.style.display = "none";
+                }
+            });
+
+            // Ajustar el tamaño de la fuente con el campo de entrada
+            inputTamaño.addEventListener("input", function () {
+                const nuevoTamaño = `${inputTamaño.value}px`;
+                etiqueta.style.fontSize = nuevoTamaño;
+            });
+
+            // Eliminar la etiqueta y el marcador al hacer clic en la "X"
+            botonEliminar.addEventListener("click", function (e) {
+                e.stopPropagation(); // Evitar que el clic en la "X" active otros eventos
+                etiqueta.remove(); // Eliminar la etiqueta del DOM
+                if (marcador) {
+                    mapa.removeLayer(marcador); // Eliminar el marcador del mapa
+                }
+            });
+
+            // Añadir la etiqueta al contenedor del mapa
+            const mapaDiv = document.getElementById("mapa");
+            mapaDiv.appendChild(etiqueta);
+
+            // Función para actualizar la posición de la etiqueta
+            function actualizarPosicionEtiqueta() {
+                const pos = mapa.latLngToContainerPoint(latlng); // Convertir coordenadas a píxeles
+                etiqueta.style.left = `${pos.x - etiqueta.offsetWidth / 2}px`; // Centrar horizontalmente
+                etiqueta.style.top = `${pos.y - etiqueta.offsetHeight - 10}px`; // Posicionar encima del punto
+            }
+
+            // Actualizar la posición inicial de la etiqueta
+            actualizarPosicionEtiqueta();
+
+            function desaparecerEtiqueta() {
+                etiqueta.style.display = "none";
+            }
+
+            // Escuchar eventos de zoom y movimiento del mapa
+            mapa.on("zoom", desaparecerEtiqueta);
+            mapa.on("move", actualizarPosicionEtiqueta);
+
+            // Permitir mover la etiqueta manualmente
+            let isDragging = false;
+            let startX, startY;
+
+            etiqueta.addEventListener("mousedown", function (e) {
+                isDragging = true;
+                startX = e.clientX - etiqueta.offsetLeft;
+                startY = e.clientY - etiqueta.offsetTop;
+                etiqueta.style.userSelect = "none";
+            });
+
+            document.addEventListener("mousemove", function (e) {
+                if (isDragging) {
+                    etiqueta.style.left = `${e.clientX - startX}px`;
+                    etiqueta.style.top = `${e.clientY - startY}px`;
+                }
+            });
+
+            document.addEventListener("mouseup", function () {
+                if (isDragging) {
+                    isDragging = false;
+                    etiqueta.style.userSelect = "auto";
+
+                    // Actualizar las coordenadas geográficas según la nueva posición de la etiqueta
+                    const rect = mapaDiv.getBoundingClientRect();
+                    const x = parseInt(etiqueta.style.left) + etiqueta.offsetWidth / 2 - rect.left;
+                    const y = parseInt(etiqueta.style.top) + etiqueta.offsetHeight + 10 - rect.top;
+                    latlng = mapa.containerPointToLatLng([x, y]); // Convertir píxeles a coordenadas
+                    marcador.setLatLng(latlng); // Actualizar la posición del marcador
+                }
+            });
+
+            return etiqueta;
+        }
+
+
+
+        document.getElementById("boton-descarga").addEventListener("click", function () {
+            const elementoMapa = document.getElementById('mapa'); // Contenedor del mapa
+
+            // Usar html2canvas para capturar el mapa
+            html2canvas(elementoMapa, {
+                scale: 2.5, // Escala para alta resolución
+                useCORS: true, // Permitir recursos externos
+                allowTaint: false // No permitir contenido "tainted"
+            }).then(canvas => {
+                // Crear un enlace para descargar la imagen
+                const enlace = document.createElement('a');
+                enlace.download = 'mapa.jpg'; // Nombre del archivo
+                enlace.href = canvas.toDataURL('image/jpeg', 0.95); // Convertir a formato JPEG con calidad 95%
+                enlace.click(); // Simular clic para descargar
+            }).catch(error => {
+                console.error("Error al generar la imagen:", error);
+            });
+        });
+
+
+
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", menu);
+            document.addEventListener("DOMContentLoaded", inicializarMapa);
+            document.addEventListener("DOMContentLoaded", nuevaLoc);
+            document.addEventListener("DOMContentLoaded", configurarBotonesEliminar);
+            document.addEventListener("DOMContentLoaded", asignarIconos);
+            document.addEventListener("DOMContentLoaded", llenarDesplegableIconos("#desplegable-iconos"));
+            document.addEventListener("DOMContentLoaded", cambiarColorIcono);
+            document.addEventListener("DOMContentLoaded", seleccionIconos);
+            document.addEventListener("DOMContentLoaded", actualizarTitulosMapa);
+            document.addEventListener("DOMContentLoaded", activarAutocompleteOSM);
+            document.addEventListener("DOMContentLoaded", () => cambiarMapaFondo("Mapa con etiquetas"));
+            document.addEventListener("DOMContentLoaded", configurarEventosMapaFondo());
+            document.addEventListener("DOMContentLoaded", actTamanoIcono);
+        } else {
+            inicializarMapa();
+            menu();
+            nuevaLoc();
+            configurarBotonesEliminar();
+            asignarIconos();
+            llenarDesplegableIconos("#desplegable-iconos");
+            cambiarColorIcono();
+            seleccionIconos();
+            actualizarTitulosMapa();
+            activarAutocompleteOSM();
+            configurarEventosMapaFondo()
+            cambiarMapaFondo();
+            actTamanoIcono();
+        }
+
+
+    </script>
+</body>
+
 </html>
