@@ -595,7 +595,7 @@
                                     Mapa sin etiquetas
                                 </label>
                                 <label>
-                                    <input type="radio" name="mapa-fondo" value="Mapa con etiquetas">
+                                    <input type="radio" name="mapa-fondo" value="Satélite">
                                     Satélite
                                 </label>
                             </div>
@@ -1536,7 +1536,12 @@
 
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", menu);
-            document.addEventListener("DOMContentLoaded", inicializarMapa);
+            document.addEventListener("DOMContentLoaded", () => {
+                inicializarMapa().then(() => {
+                    cambiarMapaFondo("Mapa con etiquetas");
+                    configurarEventosMapaFondo();
+                });
+            });
             document.addEventListener("DOMContentLoaded", nuevaLoc);
             document.addEventListener("DOMContentLoaded", configurarBotonesEliminar);
             document.addEventListener("DOMContentLoaded", asignarIconos);
@@ -1545,7 +1550,7 @@
             document.addEventListener("DOMContentLoaded", seleccionIconos);
             document.addEventListener("DOMContentLoaded", actualizarTitulosMapa);
             document.addEventListener("DOMContentLoaded", activarAutocompleteOSM);
-            document.addEventListener("DOMContentLoaded", () => cambiarMapaFondo("Mapa con etiquetas"));
+            document.addEventListener("DOMContentLoaded", cambiarMapaFondo("Mapa con etiquetas"));
             document.addEventListener("DOMContentLoaded", configurarEventosMapaFondo());
             document.addEventListener("DOMContentLoaded", actTamanoIcono);
         } else {
